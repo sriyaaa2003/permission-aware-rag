@@ -12,6 +12,7 @@ import threading
 from dataclasses import dataclass
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .db import Database
 from .embeddings import from_blob
@@ -27,7 +28,7 @@ class Hit:
 class _TenantMatrix:
     version: int
     row_of: dict[int, int]
-    mat: np.ndarray
+    mat: NDArray[np.float32]
 
 
 class TenantIndex:
@@ -71,7 +72,7 @@ class TenantIndex:
         return [int(r["chunk_id"]) for r in rows]
 
     def search(
-        self, tenant_id: str, principals: frozenset[str], query_vec: np.ndarray, k: int
+        self, tenant_id: str, principals: frozenset[str], query_vec: NDArray[np.float32], k: int
     ) -> tuple[list[Hit], int]:
         """Return (top-k hits among permitted chunks, number of permitted chunks)."""
         allowed = self.allowed_chunk_ids(tenant_id, principals)

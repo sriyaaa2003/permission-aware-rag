@@ -6,12 +6,13 @@ import threading
 from typing import Any, Protocol
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 class Embedder(Protocol):
     """Returns L2-normalised float32 vectors, shape (len(texts), dim)."""
 
-    def embed(self, texts: list[str]) -> np.ndarray: ...
+    def embed(self, texts: list[str]) -> NDArray[np.float32]: ...
 
 
 class FastEmbedEmbedder:
@@ -30,7 +31,7 @@ class FastEmbedEmbedder:
                 self._model = TextEmbedding(self.model_name)
         return self._model
 
-    def embed(self, texts: list[str]) -> np.ndarray:
+    def embed(self, texts: list[str]) -> NDArray[np.float32]:
         if not texts:
             return np.zeros((0, 0), dtype=np.float32)
         model = self._load()
@@ -38,16 +39,16 @@ class FastEmbedEmbedder:
         return normalise(vecs)
 
 
-def normalise(vecs: np.ndarray) -> np.ndarray:
+def normalise(vecs: NDArray[np.float32]) -> NDArray[np.float32]:
     norms = np.linalg.norm(vecs, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
-    out: np.ndarray = (vecs / norms).astype(np.float32)
+    out: NDArray[np.float32] = (vecs / norms).astype(np.float32)
     return out
 
 
-def to_blob(vec: np.ndarray) -> bytes:
+def to_blob(vec: NDArray[np.float32]) -> bytes:
     return np.asarray(vec, dtype=np.float32).tobytes()
 
 
-def from_blob(blob: bytes) -> np.ndarray:
+def from_blob(blob: bytes) -> NDArray[np.float32]:
     return np.frombuffer(blob, dtype=np.float32)
