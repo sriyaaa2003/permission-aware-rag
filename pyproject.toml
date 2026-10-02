@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "permrag"
+version = "0.1.0"
+description = "Permission-aware multi-tenant RAG: ACL pre-filtered retrieval, defence-in-depth re-checks and a tamper-evident audit log."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "httpx>=0.27",
+  "numpy>=1.26",
+  "fastembed>=0.3",
+  "PyJWT>=2.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10"]
+
+[project.scripts]
+permrag = "permrag.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/permrag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["embedding: uses the real embedding model (downloads it on first run)"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101", "S608", "E501"]  # line length is enforced by `ruff format`
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S311", "S105", "S106"]
