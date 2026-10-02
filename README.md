@@ -32,7 +32,7 @@ flowchart TD
 | Forged / expired / `alg=none` tokens rejected; tenant claim must match the user's real tenant | PyJWT with an explicit algorithm list; DB cross-check | `test_audit_api.py` |
 | Prompt text cannot break out of its tag | passage text is HTML-escaped | `test_passage_text_cannot_break_out_of_its_tag` |
 
-**81 automated tests**, all passing. The central property test is a fuzz test: it builds random tenants, roles, users, documents and ACLs through the real code paths, computes the allowed set in plain Python from the generated description, and requires retrieval to match it exactly.
+**92 automated tests**, all passing. The central property test is a fuzz test: it builds random tenants, roles, users, documents and ACLs through the real code paths, computes the allowed set in plain Python from the generated description, and requires retrieval to match it exactly.
 
 ## Authorization model
 
@@ -124,14 +124,14 @@ Full specification, threat model, failure matrix and ADRs: [`docs/SPEC.md`](docs
 - **Prompt injection is mitigated, not solved.** The architecture bounds the damage (permitted text only, no tools, citation validation) but a malicious document can still influence an answer given to someone allowed to read it.
 - **Audit completeness:** the HMAC chain detects edits, deletions and reordering; it cannot detect truncation of the *most recent* rows by someone who can also delete from the tail. Export the head MAC to external storage for that.
 - **Scale:** SQLite and exact in-memory search per tenant; a tenant with millions of chunks needs a vector database with payload filtering. The `TenantIndex` class is the seam. Rate limiting is in-process.
-- **Generation not run live:** the LLM clients are unit-tested through the provider interface only; they have not been run against a real endpoint. `/v1/search` needs no LLM.
+- **Generation not run live:** the LLM clients are tested against a local server that imitates the OpenAI and Anthropic wire formats; they have not been run against a real endpoint. `/v1/search` needs no LLM.
 - **Security review:** this has not had an independent security review. Treat it as a reference implementation and test your own deployment.
 
 ## Development
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                       # 81 tests (the fuzz suite is ~10 s)
+pytest -q                       # 92 tests (the fuzz suite takes ~10 s)
 ruff check src tests && ruff format --check src tests
 mypy src
 permrag verify-audit            # verify the HMAC chain of every tenant

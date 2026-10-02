@@ -132,7 +132,7 @@ here; environment-only was chosen to keep the trust surface small.
 
 Unit/integration (access control, store, audit, API), **fuzz isolation** (40 randomised worlds × all users
 against an independent oracle, plus 10 mutation sequences), concurrency (audit chain). Test doubles
-(hashing embedder, fake LLM) live only in `tests/`. **Not covered:** live LLM, JWKS/RS256 paths, load tests,
+(hashing embedder, fake LLM) live only in `tests/`. **Not covered:** live LLM (clients are tested against a local server imitating the wire formats), JWKS/RS256 paths, load tests,
 multi-process behaviour, independent security review.
 
 ## 12. Deployment
