@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 600
     llm_temperature: float = 0.0
     llm_timeout_seconds: float = 60.0
+    min_answer_chars: int = 12  # letters required besides citation markers
     abstain_token: str = "INSUFFICIENT_CONTEXT"  # noqa: S105 (sentinel string, not a secret)
 
     @model_validator(mode="after")

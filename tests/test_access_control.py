@@ -181,3 +181,19 @@ def test_defence_in_depth_drops_a_chunk_even_if_the_index_leaks(world, monkeypat
     assert res.violations == 1
     events = [e["action"] for e in w.audit.read(w.db.conn, w.t1, limit=500)]
     assert "security.violation" in events
+
+
+def test_lenient_abstention_and_content_free_answers(world, llm):
+    import pytest
+
+    from permrag.service import ServiceError
+
+    w = world
+    w.put(w.t1, w.admin1, "faq", "public faq about salary", visibility="tenant")
+    llm.reply = "INSUFFICIENT CONTEXT."
+    ans = w.svc.answer(w.user(w.eng1), "salary", 5)
+    assert ans.abstained and ans.answer == "INSUFFICIENT_CONTEXT" and ans.citations == []
+    llm.reply = "[1]"
+    with pytest.raises(ServiceError) as e:
+        w.svc.answer(w.user(w.eng1), "salary", 5)
+    assert e.value.status == 502

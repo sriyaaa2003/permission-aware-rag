@@ -73,6 +73,22 @@ class AnswerResult:
 _CITATION = re.compile(r"\[(\d+)\]")
 
 
+def _squash(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", text.lower())
+
+
+def is_abstention(text: str, abstain_token: str) -> bool:
+    """Lenient: case, spaces, underscores and trailing punctuation are ignored, because small
+    models routinely write "INSUFFICIENT CONTEXT" for the requested token."""
+    squashed = _squash(text)
+    return bool(squashed) and squashed.startswith(_squash(abstain_token))
+
+
+def has_content(text: str, min_chars: int) -> bool:
+    """True if the answer has real text besides its citation markers ("[1]" alone does not)."""
+    return sum(ch.isalpha() for ch in _CITATION.sub("", text)) >= min_chars
+
+
 def _sha(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
@@ -210,10 +226,10 @@ class RagService:
             raise ServiceError("the language model is unavailable", status=502) from exc
 
         text = out.text.strip()
-        if text == s.abstain_token:
+        if is_abstention(text, s.abstain_token):
             self._audit_search(user, "query", query, res, {"abstained": True})
             return AnswerResult(
-                text,
+                s.abstain_token,
                 True,
                 [],
                 res,
@@ -221,7 +237,11 @@ class RagService:
                 {"input": out.input_tokens, "output": out.output_tokens},
             )
         cited = sorted({int(n) for n in _CITATION.findall(text)})
-        if not cited or any(n < 1 or n > len(used) for n in cited):
+        if (
+            not cited
+            or any(n < 1 or n > len(used) for n in cited)
+            or not has_content(text, s.min_answer_chars)
+        ):
             self._audit_search(
                 user,
                 "query",
